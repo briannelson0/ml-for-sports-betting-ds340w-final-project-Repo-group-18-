@@ -1,0 +1,8 @@
+This is the code we ran in a terminal to run the code from this project:
+git clone https://github.com/conorwalsh99/ml-for-sports-betting.git
+cd ml-for-sports-betting
+.\.venv\Scripts\activate.bat #create a virtual environment.
+#install important libraries
+python -m pip install --upgrade pip setuptools wheel
+python -m pip install numpy pandas scipy scikit-learn matplotlib seaborn joblib tqdm
+python src\run_pipeline.pypython src\run_pipeline.py #run the pipeline
