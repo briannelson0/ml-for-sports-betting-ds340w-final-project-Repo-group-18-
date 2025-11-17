@@ -5,7 +5,7 @@
   - Simulates ROI using a simple fixed-stake strategy
   - Selects the model with the highest precision on predicted wins
 
-2Our code implements the full precision-based model selection pipeline developed for this project. 
+Our code implements the full precision-based model selection pipeline developed for this project. 
 It trains four machine learning models - Logistic Regression, Random Forest, SVM, and MLP - on the processed NBA dataset and evaluates 
 each using accuracy, Brier score, precision, and a fixed-stake ROI simulation. 
 The key innovation is selecting the model with the highest precision on predicted wins, which directly measures the correctness 
