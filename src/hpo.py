@@ -13,6 +13,7 @@ from sklearn.neural_network import MLPClassifier
 from calibra.errors import classwise_ece
 from calibra.utils import bin_probabilities, get_classwise_bin_weights
 from hyperopt import fmin, hp, tpe, STATUS_OK, Trials
+from sklearn.metrics import precision_score
 
 
 config = toml.load(os.path.join('.', 'config.toml'))
@@ -171,6 +172,10 @@ class HPO:
             if sum(non_empty_bins) >= 0.8 * num_bins:
                 return classwise_ece(y_pred_proba, self.y_validate, num_bins)
             return 1
+        elif self.metric == "precision":
+            y_pred = model.predict(self.X_validate)
+            return precision_score(self.y_validate, y_pred, zero_division=0)
+            
         return model.score(self.X_validate, self.y_validate)
 
     def lr_objective(self, hp_search_space: Dict[str, Union[hp.lognormal, hp.choice]]) -> Dict[str, Union[float, str]]:
@@ -188,7 +193,7 @@ class HPO:
         )
 
         model.fit(self.X_train, self.y_train)
-        sign = -1 if self.metric == "accuracy" else 1
+        sign = -1 if self.metric in ["accuracy", "precision"] else 1
         loss = self.get_score(model) * sign
 
         return {"loss": loss, "status": STATUS_OK}
@@ -213,7 +218,7 @@ class HPO:
         )
 
         model.fit(self.X_train, self.y_train)
-        sign = -1 if self.metric == "accuracy" else 1
+        sign = -1 if self.metric in ["accuracy", "precision"] else 1
         loss = self.get_score(model) * sign
 
         return {"loss": loss, "status": STATUS_OK}
@@ -236,7 +241,7 @@ class HPO:
         )
 
         model.fit(self.X_train, self.y_train)
-        sign = -1 if self.metric == "accuracy" else 1
+        sign = -1 if self.metric in ["accuracy", "precision"] else 1
         loss = self.get_score(model) * sign
 
         return {"loss": loss, "status": STATUS_OK}
@@ -263,7 +268,7 @@ class HPO:
         )
 
         model.fit(self.X_train, self.y_train)
-        sign = -1 if self.metric == "accuracy" else 1
+        sign = -1 if self.metric in ["accuracy", "precision"] else 1
         loss = self.get_score(model) * sign
 
         return {"loss": loss, "status": STATUS_OK}
@@ -538,7 +543,7 @@ class HPO:
             Dict[str, Union[str, float, int, Tuple[int]]]:
                 Dictionary containing the optimal hyperparameter values.
         """
-        sign = -1 if self.metric == "accuracy" else 1
+        sign = -1 if self.metric in ["accuracy", "precision"] else 1
 
         losses = []
         for trial in trials_dict:
