@@ -11,7 +11,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.neural_network import MLPClassifier
 from calibra.errors import classwise_ece
 from calibra.utils import bin_probabilities, get_classwise_bin_weights
-
+from sklearn.metrics import precision_score #bring in a precision metric from sklearn
 
 logging.basicConfig(
     level=logging.INFO,
@@ -102,7 +102,15 @@ class ModelSelector:
             non_empty_bins = [1 for weight in bin_weights if weight > 0]
             if sum(non_empty_bins) >= 0.8 * num_bins:
                 return classwise_ece(y_pred_proba, self.y_test, num_bins)
-            return 1        
+            return 1  
+        # Precision-based model selection
+        if self.metric == "precision":
+            # Predictions will be 0/1 labels
+            y_pred = model.predict(self.X_test)
+            # Handle rare cases where no positive predictions are made
+            return precision_score(self.y_test, y_pred, zero_division=0)
+
+    
         return model.score(self.X_test, self.y_test)
         
 
@@ -205,8 +213,13 @@ class ModelSelector:
         Returns (str): Name of best-performing model.
         """
         scores_list = list(self.model_scores.values())
-        best_score = np.max(scores_list) if self.metric == 'accuracy' else np.min(scores_list)
-
+        # For accuracy and precision, higher = better
+        if self.metric in ['accuracy', 'precision']:
+            best_score = np.max(scores_list)
+        else:
+            # For calibration (ECE), lower = better
+            best_score = np.min(scores_list)
+            
         for model, score in self.model_scores.items():
             if score == best_score:
                 return model
