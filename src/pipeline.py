@@ -248,14 +248,18 @@ class NBABettingExperiment:
         
         accuracy_feature_selector = FeatureSelector(initial_training_data_X, validation_data_X, initial_training_data_y, validation_data_y, metric='accuracy')
         calibration_feature_selector = FeatureSelector(initial_training_data_X, validation_data_X, initial_training_data_y, validation_data_y, metric='calibration')
+        precicion_feature_selector = FeatureSelector(initial_training_data_X, validation_data_X, initial_training_data_y, validation_data_y, metric='precision')
+        
 
         accuracy_optimal_features = accuracy_feature_selector.run_feature_selection() 
         logging.info(f'Optimal features for accuracy-driven predictive modelling: {accuracy_optimal_features}')   
         calibration_optimal_features = calibration_feature_selector.run_feature_selection()
-        logging.info(f'Optimal features for calibration-driven predictive modelling: {calibration_optimal_features}')           
+        logging.info(f'Optimal features for calibration-driven predictive modelling: {calibration_optimal_features}')
+        precision_optimal_features = precision_feature_selector.run_feature_selection()
+        logging.info(f'Optimal features for precision-driven predictive modelling: {precision_optimal_features}')
 
-        OptimalFeatures = namedtuple('OptimalFeatures', 'accuracy_driven calibration_driven')
-        optimal_features = OptimalFeatures(accuracy_optimal_features, calibration_optimal_features)
+        OptimalFeatures = namedtuple('OptimalFeatures', 'accuracy_driven calibration_driven precision_driven')
+        optimal_features = OptimalFeatures(accuracy_optimal_features, calibration_optimal_features, precision_optimal_features)
 
         return optimal_features    
         
@@ -282,10 +286,11 @@ class NBABettingExperiment:
         """
         initial_training_data_X, validation_data_X = modelling_ready_datasets.initial_training, modelling_ready_datasets.validation
         initial_training_data_y, validation_data_y = preprocessed_datasets.initial_training['home_victory'].to_list(), preprocessed_datasets.validation['home_victory'].to_list()
-        accuracy_optimal_features, calibration_optimal_features = optimal_features.accuracy_driven, optimal_features.calibration_driven 
+        accuracy_optimal_features, calibration_optimal_features, precision_optimal_features = optimal_features.accuracy_driven, optimal_features.calibration_driven, optimal_features.precision_driven 
                 
         accuracy_hpo = HPO(initial_training_data_X, validation_data_X, initial_training_data_y, validation_data_y, accuracy_optimal_features, metric='accuracy', num_trials=self.num_hpo_trials, num_scoring_runs=self.num_prediction_runs)
         calibration_hpo = HPO(initial_training_data_X, validation_data_X, initial_training_data_y, validation_data_y, calibration_optimal_features, metric='calibration', num_trials=self.num_hpo_trials, num_scoring_runs=self.num_prediction_runs)
+        precision_hpo = HPO(initial_training_data_X, validation_data_X, initial_trainin_data_y, validation_data_y, precision_optimal_features, metric='precision', num_trials=self.num_hpo_trials, num_scoring_runs=self.num_prediction_runs)
 
         logging.info(f'\nRunning hyperparameter optimisation with {self.num_hpo_trials} trials and {self.num_prediction_runs} prediction runs.')
         logging.info('Accuracy-driven hyperparameter optimisation:')
@@ -294,9 +299,11 @@ class NBABettingExperiment:
         logging.info('Calibration-driven hyperparameter optimisation:')
         calibration_optimal_hyperparameters = calibration_hpo.run_hpo()
         logging.info(f'Optimal calibration-driven hyperparameters: {calibration_optimal_hyperparameters}')
+        precision_optimal_hyperparameters = precision_hpo.run_hpo()
+        logging.info(f'Optimal precision-driven hyperparameters: {precision_optimal_hyperparameters}')
 
-        OptimalHyperparameters = namedtuple('OptimalHyperparameters', 'accuracy_driven calibration_driven')
-        optimal_hyperparameters = OptimalHyperparameters(accuracy_optimal_hyperparameters, calibration_optimal_hyperparameters)
+        OptimalHyperparameters = namedtuple('OptimalHyperparameters', 'accuracy_driven calibration_driven precision_driven')
+        optimal_hyperparameters = OptimalHyperparameters(accuracy_optimal_hyperparameters, calibration_optimal_hyperparameters, precision_optimal_hyperparameters)
 
         return optimal_hyperparameters
 
@@ -327,19 +334,22 @@ class NBABettingExperiment:
         """
         extended_training_data_X, test_data_X = modelling_ready_datasets.extended_training, modelling_ready_datasets.test
         extended_training_data_y, test_data_y = preprocessed_datasets.extended_training['home_victory'].to_list(), preprocessed_datasets.test['home_victory'].to_list()
-        accuracy_optimal_features, calibration_optimal_features = optimal_features.accuracy_driven, optimal_features.calibration_driven 
-        accuracy_optimal_hyperparameters, calibration_optimal_hyperparameters = optimal_hyperparameters.accuracy_driven, optimal_hyperparameters.calibration_driven 
+        accuracy_optimal_features, calibration_optimal_features, precision_optimal_features = optimal_features.accuracy_driven, optimal_features.calibration_driven, optimal_features.precision_driven
+        accuracy_optimal_hyperparameters, calibration_optimal_hyperparameters, precision_optimal_hyperparameters = optimal_hyperparameters.accuracy_driven, optimal_hyperparameters.calibration_driven, optimal_hyperparameters.precision_driven
                 
         accuracy_model_selection = ModelSelector(extended_training_data_X, test_data_X, extended_training_data_y, test_data_y, accuracy_optimal_features, accuracy_optimal_hyperparameters, metric='accuracy', num_scoring_runs=self.num_prediction_runs)
         calibration_model_selection = ModelSelector(extended_training_data_X, test_data_X, extended_training_data_y, test_data_y, calibration_optimal_features, calibration_optimal_hyperparameters, metric='calibration', num_scoring_runs=self.num_prediction_runs)
+        precicion_model_selection = ModelSelector(extended_training_data_X, test_data_X, extended_training_data_y, test_data_y, precision_optimal_features, precision_optimal_hyperparameters, metric='precision', num_scoring_runs=self.num_prediction_runs)
 
         logging.info('Running accuracy-driven model selection.')
         accuracy_optimal_model = accuracy_model_selection.run_model_selection()    
         logging.info('Running calibration-driven model selection.')
         calibration_optimal_model = calibration_model_selection.run_model_selection()
+        precision_optimal_model = precision_model_selection.run_model_selection()
+        logging.info('Running precision-driven model selection.')
 
-        OptimalModels = namedtuple('OptimalModels', 'accuracy_driven calibration_driven')
-        optimal_models = OptimalModels(accuracy_optimal_model, calibration_optimal_model)
+        OptimalModels = namedtuple('OptimalModels', 'accuracy_driven calibration_driven precision_driven')
+        optimal_models = OptimalModels(accuracy_optimal_model, calibration_optimal_model, precision_optimal_model)
 
         return optimal_models
 
@@ -376,9 +386,9 @@ class NBABettingExperiment:
         final_training_data_X, betting_simulation_data_X = modelling_ready_datasets.final_training, modelling_ready_datasets.betting_simulation
         final_training_data_y, betting_simulation_data_y = preprocessed_datasets.final_training['home_victory'].to_list(), preprocessed_datasets.betting_simulation['home_victory'].to_list()
         odds = preprocessed_datasets.odds
-        accuracy_optimal_features, calibration_optimal_features = optimal_features.accuracy_driven, optimal_features.calibration_driven 
-        accuracy_optimal_hyperparameters, calibration_optimal_hyperparameters = optimal_hyperparameters.accuracy_driven, optimal_hyperparameters.calibration_driven 
-        accuracy_optimal_model, calibration_optimal_model = optimal_models.accuracy_driven, optimal_models.calibration_driven
+        accuracy_optimal_features, calibration_optimal_features, precision_optimal_features = optimal_features.accuracy_driven, optimal_features.calibration_driven, optimal_features.precision_driven
+        accuracy_optimal_hyperparameters, calibration_optimal_hyperparameters, precision_optiaml_hyperparameters = optimal_hyperparameters.accuracy_driven, optimal_hyperparameters.calibration_driven, optimal_hyperparameters.precision_driven
+        accuracy_optimal_model, calibration_optimal_model, precision_optimal_model = optimal_models.accuracy_driven, optimal_models.calibration_driven, optimal_models.precision_driven
        
         accuracy_driven_betting_simulation = BettingSimulation(
             accuracy_optimal_model,
@@ -405,22 +415,43 @@ class NBABettingExperiment:
             metric='calibration',
             num_runs=self.num_prediction_runs,
         )
+        precision_driven_betting_simulation = BettingSimulation(
+            precision_optimal_model,
+            precision_optimal_features,
+            precision_optimal_hyperparameters,
+            final_training_data_X,
+            final_training_data_y,
+            betting_simulation_data_X,
+            betting_simulation_data_y,
+            odds,
+            metric='precision',
+            num_runs=self.num_prediction_runs,
+        )
         
         accuracy_driven_betting_simulation.generate_predictions()
         calibration_driven_betting_simulation.generate_predictions()
+        precision_driven_betting_simulation.generate_predictions()
         
         accuracy_driven_betting_simulation.record_metrics()
         calibration_driven_betting_simulation.record_metrics()
+        precision_driven_betting_simulation.record_metrics()
 
         logging.info('Running accuracy-driven fixed betting simulation.')
         accuracy_fixed_betting_bankroll, accuracy_value_bets = accuracy_driven_betting_simulation.run_betting_simulation(rule='fixed')
         logging.info('Running accuracy-driven kelly betting simulation.')
         accuracy_kelly_betting_bankroll, accuracy_value_bets = accuracy_driven_betting_simulation.run_betting_simulation(rule='kelly')
 
+
         logging.info('Running calibration-driven fixed betting simulation.')
         calibration_fixed_betting_bankroll, calibration_value_bets = calibration_driven_betting_simulation.run_betting_simulation(rule='fixed')
         logging.info('Running calibration-driven kelly betting simulation.')
         calibration_kelly_betting_bankroll, calibration_value_bets = calibration_driven_betting_simulation.run_betting_simulation(rule='kelly')
+
+        logging.info('Running precision-driven fixed betting sumulation.')
+        precision_fixed_betting_bankroll, precision_value_bets = precision_driven_betting_simulation.run_betting_simulation(rule='fixed')
+        logging.info('Running precision-driven kelly betting simulation.')
+        precision_kelly_betting_bankroll, precision_value_bets = precision_driven_betting_simulation.run_betting_simulation(rule='kelly')
+        
 
         plotting_data = {
             'calibration_fixed_betting_bankroll': calibration_fixed_betting_bankroll,
@@ -428,7 +459,10 @@ class NBABettingExperiment:
             'calibration_value_bets': calibration_value_bets,
             'accuracy_fixed_betting_bankroll': accuracy_fixed_betting_bankroll,
             'accuracy_kelly_betting_bankroll': accuracy_kelly_betting_bankroll,
-            'accuracy_value_bets': accuracy_value_bets
+            'accuracy_value_bets': accuracy_value_bets,
+            'precision_fixed_betting_bankroll': precision_fixed_betting_bankroll,
+            'precision_kelly_betting_bankroll': precision_kelly_betting_bankroll,
+            'precision_value_bets': precision_value_bets
         }        
 
         with open(os.path.join('.', 'data', 'intermediate', 'betting_simulation_plotting_data.json'), 'w') as file:
@@ -436,7 +470,7 @@ class NBABettingExperiment:
 
         BettingSimulationPlottingData = namedtuple(
             'BettingSimulationPlottingData',
-            'calibration_bankroll_fixed calibration_bankroll_kelly calibration_value_bets accuracy_bankroll_fixed accuracy_bankroll_kelly accuracy_value_bets'
+            'calibration_bankroll_fixed calibration_bankroll_kelly calibration_value_bets accuracy_bankroll_fixed accuracy_bankroll_kelly accuracy_value_bets precision_bankroll_fixed precision_bankroll_kelly precision_value_bets'
             )
 
         betting_simulation_plotting_data = BettingSimulationPlottingData(
@@ -445,7 +479,10 @@ class NBABettingExperiment:
             calibration_value_bets,
             accuracy_fixed_betting_bankroll,
             accuracy_kelly_betting_bankroll,
-            accuracy_value_bets
+            accuracy_value_bets,
+            precision_fixed_betting_bankroll,
+            precision_kelly_betting_bankroll,
+            precision_value_bets
         )
 
         return betting_simulation_plotting_data
@@ -464,29 +501,39 @@ class NBABettingExperiment:
         calibration_value_bets,
         accuracy_fixed_betting_bankroll,
         accuracy_kelly_betting_bankroll,
-        accuracy_value_bets
+        accuracy_value_bets,
+        precision_fixed_betting_bankroll,
+        precision_kelly_betting_bankroll,
+        precision_value_bets
         ) = (
         betting_simulation_plotting_data.calibration_bankroll_fixed,
         betting_simulation_plotting_data.calibration_bankroll_kelly, 
         betting_simulation_plotting_data.calibration_value_bets,
         betting_simulation_plotting_data.accuracy_bankroll_fixed,
         betting_simulation_plotting_data.accuracy_bankroll_kelly,
-        betting_simulation_plotting_data.accuracy_value_bets
+        betting_simulation_plotting_data.accuracy_value_bets,
+        betting_simulation_plotting_data.precision_bankroll_fixed,
+        betting_simulation_plotting_data.precision_bankroll_kelly,
+        betting_simulation_plotting_data.precision_value_bets
         )
         
         fixed_betting_simulation_plotter = BettingSimulationPlotter(
             calibration_fixed_betting_bankroll,
             accuracy_fixed_betting_bankroll,
+            precision_fixed_betting_bankroll,
             calibration_value_bets,
             accuracy_value_bets,
+            precision_value_bets,
             rule='fixed'
         )
         
         kelly_betting_simulation_plotter = BettingSimulationPlotter(
             calibration_kelly_betting_bankroll,
             accuracy_kelly_betting_bankroll,
+            precision_kelly_betting_bankroll,
             calibration_value_bets,
             accuracy_value_bets,
+            precision_value_bets,
             rule='kelly'
         )
 
@@ -494,7 +541,8 @@ class NBABettingExperiment:
         kelly_betting_simulation_plotter.plot_bankrolls()
         
         fixed_betting_simulation_plotter.plot_value_bet_distributions('calibration')
-        fixed_betting_simulation_plotter.plot_value_bet_distributions('accuracy')         
+        fixed_betting_simulation_plotter.plot_value_bet_distributions('accuracy')  
+        fixed_betting_simulation_plotter.plot_value_bet_distributions('precision')
 
         with open(os.path.join(".", "data", "output", "fixed_betting", "accuracy_driven_results.json"), "rb") as file:
             accuracy_driven_fixed_betting_results = json.load(file)
@@ -504,6 +552,10 @@ class NBABettingExperiment:
             calibration_driven_fixed_betting_results = json.load(file)
         with open(os.path.join(".", "data", "output", "kelly_betting", "calibration_driven_results.json"), "rb") as file:
             calibration_driven_kelly_betting_results = json.load(file)
+        with open(os.path.join(".", "data", "output", "fixed_betting", "precison_driven_results.json"), "rb") as file:
+            precision_driven_fixed_betting_results = json.load(file)
+        with open(os.path.join(".", "data", "output", "kelly_betting", "precision_driven_results.json"), "rb") as file:
+            precision_driven_kelly_betting_results = json.load(file)
 
         max_calibration_roi = np.maximum(
             calibration_driven_fixed_betting_results['ROI'], calibration_driven_kelly_betting_results['ROI']
@@ -517,6 +569,12 @@ class NBABettingExperiment:
         average_accuracy_roi = np.mean(
             [accuracy_driven_fixed_betting_results['ROI'], accuracy_driven_kelly_betting_results['ROI']]
         )
+        max_precision_roi = np.maximum(
+            precision_driven_fixed_betting_results['ROI'], precision_driven_kelly_betting_results['ROI']
+        )
+        average_precision_roi = np.mean(
+            [precision_driven_fixed_betting_results['ROI'], precision_driven_kelly_betting_results['ROI']]
+        )
 
         roi_results = {
             'calibration': {
@@ -526,25 +584,41 @@ class NBABettingExperiment:
             'accuracy': {
                 'mean': average_accuracy_roi,
                 'max': max_accuracy_roi,
+            },
+            'precision': {
+                'mean': average_precision_roi,
+                'max': max_precision_roi,
             }
+            
         }
 
         with open(os.path.join(".", "data", "output", "central_hypothesis", "accuracy_driven_betting_simulation_metrics.json"), "rb") as file:
             accuracy_driven_model_metrics = json.load(file)
         with open(os.path.join(".", "data", "output", "central_hypothesis", "calibration_driven_betting_simulation_metrics.json"), "rb") as file:
             calibration_driven_model_metrics = json.load(file)
+        with open(os.path.join(".", "data", "output", "central_hypothesis", "precision_driven_betting_simulation_metrics.json"), "rb") as file:
+            precision_driven_model_metrics = json.load(file)
 
         logging.info(f'Accuracy-driven betting systems:')
         logging.info(f'Accuracy: {round(100 * accuracy_driven_model_metrics["accuracy"], 2)}%')
         logging.info(f'Class-wise ECE: {round(100 * accuracy_driven_model_metrics["calibration_score"], 2)}%')
+        logging.info(f'Precision: {round(100 * accuracy_driven_model_metric['precision'], 2)}%')
         logging.info(f'Mean return on investment: {roi_results["accuracy"]["mean"]}%')
         logging.info(f'Max return on investment: {roi_results["accuracy"]["max"]}%\n')
 
         logging.info(f'Calibration-driven betting systems:')
         logging.info(f'Accuracy: {round(100 * calibration_driven_model_metrics["accuracy"], 2)}%')
         logging.info(f'Class-wise ECE: {round(100 * calibration_driven_model_metrics["calibration_score"], 2)}%')
+        logging.info(f'Precision: {round(100 * calibration_driven_model_metric['precision'], 2)}%')
         logging.info(f'Mean return on investment: {roi_results["calibration"]["mean"]}%')
         logging.info(f'Max return on investment: {roi_results["calibration"]["max"]}%')
+
+        logging.info(f'Precision-driven betting systems:')
+        logging.info(f'Accuracy: {round(100 * precision_driven_model_metrics["accuracy"], 2)}%')
+        logging.info(f'Class-wise ECE: {round(100 * precision_driven_model_metrics["calibration_score"], 2)}%')
+        logging.info(f'Precision: {round(100 * precision_driven_model_metric['precision'], 2)}%')
+        logging.info(f'Mean return on investment: {roi_results["precision"]["mean"]}%')
+        logging.info(f'Max return on investment: {roi_results["precision"]["max"]}%')
 
         with open(os.path.join(".", "data", "output", "central_hypothesis", "roi.json"), "w") as file:
             json.dump(roi_results, file, indent=4)
@@ -552,6 +626,7 @@ class NBABettingExperiment:
         value_bet_prediction_variances = {
             'calibration': np.var(calibration_value_bets['predicted_probability']),
             'accuracy': np.var(accuracy_value_bets['predicted_probability']),
+            'accuracy': np.var(precision_value_bets['predicted_probability']),
             }
         
         with open(os.path.join(".", "data", "output", "value_bets", "value_bets_prediction_variances.json"), "w") as file:
