@@ -11,6 +11,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import accuracy_score
 from calibra.errors import classwise_ece
+from sklearn.metrics import precision_score
 
 
 logging.basicConfig(
@@ -140,6 +141,8 @@ class BettingSimulation:
         metric_dict = {
             'calibration_score': classwise_ece(self.prediction_array, self.y_betting_simulation),
             'accuracy': accuracy_score(self.y_betting_simulation, predicted_labels), 
+            'precision': precision_score(self.y_betting_simulation, predicted_labels, zero_division=0)
+}
         }
         
         with open(os.path.join(".", "data", "output", "central_hypothesis", f"{self.metric}_driven_betting_simulation_metrics.json"), "w") as file:
