@@ -180,11 +180,16 @@ class FeatureSelector:
         Returns:
             float: Score of model under given metric.
         """
-        if metric not in ['accuracy', 'calibration']:
-            raise ValueError('Metric must be one of ["accuracy", "calibration"].')
+        if metric not in ['accuracy', 'calibration','precicion']:
+            raise ValueError('Metric must be one of ["accuracy", "calibration","precision"].')
         
         if metric == 'accuracy':
             return model.score(X_validate[features], y_validate)
+        
+        elif metric == 'precision':
+            y_pred = model.predict(X_validate[features])
+            from sklearn.metrics import precision_score
+            return precision_score(y_validate, y_pred, zero_division=0)
         
         else:            
             num_bins = 20
@@ -209,7 +214,10 @@ class FeatureSelector:
         Returns:
             List[str]: Optimal feature subset list.
         """
-        sign = -1 if self.metric == "accuracy" else 1
+        if self.metric in ["accuracy", "precision"]:
+            sign = -1   # higher score is better → multiply by -1 for min() selection
+        else:
+            sign = 1    # calibration → lower ECE is better
 
         scores = [
             score_dict['score'] * sign for score_dict in feature_subset_scores
@@ -256,8 +264,8 @@ class FeatureSelector:
             List[Dict[str, Union[float, List[str]]]]:
                 List of feature subsets and their corresponding score.                
         """
-        if metric not in ['accuracy', 'calibration']:
-            raise ValueError('Metric must be one of ["accuracy", "calibration"].')
+        if metric not in ['accuracy', 'calibration','precision']:
+            raise ValueError('Metric must be one of ["accuracy", "calibration","precision"].')
                      
         full_feature_set = list(X_train.columns)
         current_feature_set = []
@@ -265,14 +273,16 @@ class FeatureSelector:
 
         while len(current_feature_set) < len(full_feature_set):            
             features_to_test = [feature for feature in full_feature_set if feature not in current_feature_set]  
-            best_score = 1 if metric == 'calibration' else 0
-
+            if metric == 'calibration':
+                best_score = 1
+            else:
+                best_score = 0 
             for feature in features_to_test:                
                 feature_set = current_feature_set + [feature]
                 clf = LogisticRegression()
                 clf.fit(X_train[feature_set], y_train)
                 score = FeatureSelector.get_score(clf, X_validate, y_validate, feature_set, metric)              
-                if (metric == 'accuracy' and score > best_score) or (metric == 'calibration' and score <= best_score): 
+                if (metric in ['accuracy','precision'] and score > best_score) or (metric == 'calibration' and score <= best_score): 
                     best_score = score
                     next_best_feature = feature
 
