@@ -37,14 +37,18 @@ class BettingSimulationPlotter:
             self, 
             calibration_driven_bankroll_tracker: List[float],
             accuracy_driven_bankroll_tracker: List[float],
+            precision_driven_bankroll_tracker: List[float],
             calibration_driven_value_bets: Dict[str, List[float]],
             accuracy_driven_value_bets: Dict[str, List[float]],
+            precision_driven_value_bets:Dict[str, List[float]],
             rule: str,  
         ):
         self.calibration_driven_bankroll_tracker = calibration_driven_bankroll_tracker
         self.accuracy_driven_bankroll_tracker = accuracy_driven_bankroll_tracker
+        self.precision_driven_bankroll_tracker = precision_driven_bankroll_tracker
         self.calibration_driven_value_bets = calibration_driven_value_bets
         self.accuracy_driven_value_bets = accuracy_driven_value_bets
+        self.precision_driven_value_bets = precision_driven_value_bets
         self.rule = rule
 
     def plot_bankrolls(self):
@@ -55,12 +59,14 @@ class BettingSimulationPlotter:
 
         ax.plot(self.calibration_driven_bankroll_tracker, label='Calibration-Driven')
         ax.plot(self.accuracy_driven_bankroll_tracker, label='Accuracy-Driven')
+        ax.plot(self.precision_driven_bankroll_tracker, label='Precision-Driven')
         
         plt.ylim(
             0, 
             np.maximum(
                 max(self.calibration_driven_bankroll_tracker) + 5000,
-                max(self.accuracy_driven_bankroll_tracker) +5000
+                max(self.accuracy_driven_bankroll_tracker) +5000,
+                max(self.precision_driven_bankroll_tracker) + 5000
             )
         )
 
@@ -78,6 +84,10 @@ class BettingSimulationPlotter:
             list(range(1000, len(self.accuracy_driven_bankroll_tracker))),
             self.accuracy_driven_bankroll_tracker[1000:]
         )
+        axins.plot(
+            list(range(1000, len(self.precision_driven_bankroll_tracker))),
+            self.precision_driven_bankroll_tracker[1000:]
+        )
         axins.axhline(y=self.accuracy_driven_bankroll_tracker[0], color='black', linestyle='--', label='Starting Bankroll')
         
         axins.set_title('End of Season Bankroll of Each System')
@@ -85,7 +95,7 @@ class BettingSimulationPlotter:
         axins.set_ylabel('Bankroll ($)', fontsize=12)
         axins.set_ylim(
             0,
-            np.maximum(self.calibration_driven_bankroll_tracker[-1] + 1000, self.accuracy_driven_bankroll_tracker[-1] + 1000)
+            np.maximum(self.calibration_driven_bankroll_tracker[-1] + 1000, self.accuracy_driven_bankroll_tracker[-1] + 1000, self.precision_driven_bankroll_tracker[-1] + 1000)
         )
         ax.indicate_inset_zoom(axins, edgecolor='grey', alpha=1)
         plt.savefig(os.path.join(".", "data", "output", f"{self.rule}_betting", "bankrolls_comparison.png"), dpi=300)
@@ -100,6 +110,7 @@ class BettingSimulationPlotter:
         value_bets_data = {
             'calibration': self.calibration_driven_value_bets,
             'accuracy': self.accuracy_driven_value_bets,
+            'precision': self.precision_driven_value_bets 
         }
 
         fig, ax = plt.subplots()
