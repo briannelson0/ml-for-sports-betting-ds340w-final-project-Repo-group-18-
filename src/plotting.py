@@ -63,7 +63,7 @@ class BettingSimulationPlotter:
         
         plt.ylim(
             0, 
-            np.maximum(
+            max(
                 max(self.calibration_driven_bankroll_tracker) + 5000,
                 max(self.accuracy_driven_bankroll_tracker) +5000,
                 max(self.precision_driven_bankroll_tracker) + 5000
@@ -95,7 +95,7 @@ class BettingSimulationPlotter:
         axins.set_ylabel('Bankroll ($)', fontsize=12)
         axins.set_ylim(
             0,
-            np.maximum(self.calibration_driven_bankroll_tracker[-1] + 1000, self.accuracy_driven_bankroll_tracker[-1] + 1000, self.precision_driven_bankroll_tracker[-1] + 1000)
+            max(self.calibration_driven_bankroll_tracker[-1] + 1000, self.accuracy_driven_bankroll_tracker[-1] + 1000, self.precision_driven_bankroll_tracker[-1] + 1000)
         )
         ax.indicate_inset_zoom(axins, edgecolor='grey', alpha=1)
         plt.savefig(os.path.join(".", "data", "output", f"{self.rule}_betting", "bankrolls_comparison.png"), dpi=300)
