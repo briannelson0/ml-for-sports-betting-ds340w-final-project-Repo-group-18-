@@ -6,12 +6,21 @@ To run group 18's code which includes precision in the pipeline, follow the inst
 
 
 Here is the code to run our updated pipeline with precision-based model selection on your device:
+
 1. Open a terminal
+   
 2.clone the github:
+
 git clone https://github.com/briannelson0/ml-for-sports-betting-ds340w-final-project-Repo-group-18-
+
 3.change directory:
+
 cd ml-for-sports-betting-ds340w-final-project-Repo-group-18-
+
 4. install dependencies:
+
 poetry install
-5. run_pipeline
+
+6. run_pipeline
+   
 poetry run python src/run_pipeline.py
