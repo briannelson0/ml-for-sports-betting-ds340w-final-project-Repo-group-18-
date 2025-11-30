@@ -248,7 +248,7 @@ class NBABettingExperiment:
         
         accuracy_feature_selector = FeatureSelector(initial_training_data_X, validation_data_X, initial_training_data_y, validation_data_y, metric='accuracy')
         calibration_feature_selector = FeatureSelector(initial_training_data_X, validation_data_X, initial_training_data_y, validation_data_y, metric='calibration')
-        precicion_feature_selector = FeatureSelector(initial_training_data_X, validation_data_X, initial_training_data_y, validation_data_y, metric='precision')
+        precision_feature_selector = FeatureSelector(initial_training_data_X, validation_data_X, initial_training_data_y, validation_data_y, metric='precision')
         
 
         accuracy_optimal_features = accuracy_feature_selector.run_feature_selection() 
@@ -290,7 +290,7 @@ class NBABettingExperiment:
                 
         accuracy_hpo = HPO(initial_training_data_X, validation_data_X, initial_training_data_y, validation_data_y, accuracy_optimal_features, metric='accuracy', num_trials=self.num_hpo_trials, num_scoring_runs=self.num_prediction_runs)
         calibration_hpo = HPO(initial_training_data_X, validation_data_X, initial_training_data_y, validation_data_y, calibration_optimal_features, metric='calibration', num_trials=self.num_hpo_trials, num_scoring_runs=self.num_prediction_runs)
-        precision_hpo = HPO(initial_training_data_X, validation_data_X, initial_trainin_data_y, validation_data_y, precision_optimal_features, metric='precision', num_trials=self.num_hpo_trials, num_scoring_runs=self.num_prediction_runs)
+        precision_hpo = HPO(initial_training_data_X, validation_data_X, initial_training_data_y, validation_data_y, precision_optimal_features, metric='precision', num_trials=self.num_hpo_trials, num_scoring_runs=self.num_prediction_runs)
 
         logging.info(f'\nRunning hyperparameter optimisation with {self.num_hpo_trials} trials and {self.num_prediction_runs} prediction runs.')
         logging.info('Accuracy-driven hyperparameter optimisation:')
@@ -339,7 +339,7 @@ class NBABettingExperiment:
                 
         accuracy_model_selection = ModelSelector(extended_training_data_X, test_data_X, extended_training_data_y, test_data_y, accuracy_optimal_features, accuracy_optimal_hyperparameters, metric='accuracy', num_scoring_runs=self.num_prediction_runs)
         calibration_model_selection = ModelSelector(extended_training_data_X, test_data_X, extended_training_data_y, test_data_y, calibration_optimal_features, calibration_optimal_hyperparameters, metric='calibration', num_scoring_runs=self.num_prediction_runs)
-        precicion_model_selection = ModelSelector(extended_training_data_X, test_data_X, extended_training_data_y, test_data_y, precision_optimal_features, precision_optimal_hyperparameters, metric='precision', num_scoring_runs=self.num_prediction_runs)
+        precision_model_selection = ModelSelector(extended_training_data_X, test_data_X, extended_training_data_y, test_data_y, precision_optimal_features, precision_optimal_hyperparameters, metric='precision', num_scoring_runs=self.num_prediction_runs)
 
         logging.info('Running accuracy-driven model selection.')
         accuracy_optimal_model = accuracy_model_selection.run_model_selection()    
@@ -387,7 +387,7 @@ class NBABettingExperiment:
         final_training_data_y, betting_simulation_data_y = preprocessed_datasets.final_training['home_victory'].to_list(), preprocessed_datasets.betting_simulation['home_victory'].to_list()
         odds = preprocessed_datasets.odds
         accuracy_optimal_features, calibration_optimal_features, precision_optimal_features = optimal_features.accuracy_driven, optimal_features.calibration_driven, optimal_features.precision_driven
-        accuracy_optimal_hyperparameters, calibration_optimal_hyperparameters, precision_optiaml_hyperparameters = optimal_hyperparameters.accuracy_driven, optimal_hyperparameters.calibration_driven, optimal_hyperparameters.precision_driven
+        accuracy_optimal_hyperparameters, calibration_optimal_hyperparameters, precision_optimal_hyperparameters = optimal_hyperparameters.accuracy_driven, optimal_hyperparameters.calibration_driven, optimal_hyperparameters.precision_driven
         accuracy_optimal_model, calibration_optimal_model, precision_optimal_model = optimal_models.accuracy_driven, optimal_models.calibration_driven, optimal_models.precision_driven
        
         accuracy_driven_betting_simulation = BettingSimulation(
@@ -602,21 +602,21 @@ class NBABettingExperiment:
         logging.info(f'Accuracy-driven betting systems:')
         logging.info(f'Accuracy: {round(100 * accuracy_driven_model_metrics["accuracy"], 2)}%')
         logging.info(f'Class-wise ECE: {round(100 * accuracy_driven_model_metrics["calibration_score"], 2)}%')
-        logging.info(f'Precision: {round(100 * accuracy_driven_model_metric['precision'], 2)}%')
+        logging.info(f'Precision: {round(100 * accuracy_driven_model_metric["precision"], 2)}%')
         logging.info(f'Mean return on investment: {roi_results["accuracy"]["mean"]}%')
         logging.info(f'Max return on investment: {roi_results["accuracy"]["max"]}%\n')
 
         logging.info(f'Calibration-driven betting systems:')
         logging.info(f'Accuracy: {round(100 * calibration_driven_model_metrics["accuracy"], 2)}%')
         logging.info(f'Class-wise ECE: {round(100 * calibration_driven_model_metrics["calibration_score"], 2)}%')
-        logging.info(f'Precision: {round(100 * calibration_driven_model_metric['precision'], 2)}%')
+        logging.info(f'Precision: {round(100 * calibration_driven_model_metric["precision"], 2)}%')
         logging.info(f'Mean return on investment: {roi_results["calibration"]["mean"]}%')
         logging.info(f'Max return on investment: {roi_results["calibration"]["max"]}%')
 
         logging.info(f'Precision-driven betting systems:')
         logging.info(f'Accuracy: {round(100 * precision_driven_model_metrics["accuracy"], 2)}%')
         logging.info(f'Class-wise ECE: {round(100 * precision_driven_model_metrics["calibration_score"], 2)}%')
-        logging.info(f'Precision: {round(100 * precision_driven_model_metric['precision'], 2)}%')
+        logging.info(f'Precision: {round(100 * precision_driven_model_metric["precision"], 2)}%')
         logging.info(f'Mean return on investment: {roi_results["precision"]["mean"]}%')
         logging.info(f'Max return on investment: {roi_results["precision"]["max"]}%')
 
