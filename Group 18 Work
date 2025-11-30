@@ -1,4 +1,4 @@
-This is the code we ran in a terminal to run the parent paper code from this project:
+This is the code we ran in a terminal to run the original parent paper code from this project:
 git clone https://github.com/conorwalsh99/ml-for-sports-betting.git
 cd ml-for-sports-betting
 .\.venv\Scripts\activate.bat #create a virtual environment.
