@@ -9,7 +9,7 @@ from calibra.errors import classwise_ece
 from calibra.utils import bin_probabilities, get_classwise_bin_weights
 from utils import sort_labels_by_values
 from sklearn.linear_model import LogisticRegression
-
+from sklearn.metrics import precision_score
 
 config = toml.load(os.path.join('.', 'config.toml'))
 logging.basicConfig(
@@ -180,7 +180,7 @@ class FeatureSelector:
         Returns:
             float: Score of model under given metric.
         """
-        if metric not in ['accuracy', 'calibration','precicion']:
+        if metric not in ['accuracy', 'calibration','precision']:
             raise ValueError('Metric must be one of ["accuracy", "calibration","precision"].')
         
         if metric == 'accuracy':
